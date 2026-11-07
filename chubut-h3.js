@@ -56,6 +56,23 @@ function start(){if(!window.L||!window.h3){return setTimeout(start,60);}
  var ob=d.getElementById("l-out");if(ob)ob.addEventListener("change",function(){["chubut","wales"].forEach(function(s){var o=M[s];if(!o)return;if(ob.checked)o.m.addLayer(o.out);else o.m.removeLayer(o.out);});});}
 start();
 })();
+/* Records: this webapp's own data store, data/central.json (the catalogue fields for the IDs in data/sources.json,
+   synced read-only from the central catalogue by tools/sync_central.py every 6 h). Optional: the page works without it. */
+(function(){var d=document,box=d.getElementById("recs"),ul=d.getElementById("recs-list");if(!box||!ul)return;
+var use={};
+Promise.all([fetch("data/central.json?h="+Math.floor(Date.now()/3.6e6)).then(function(r){return r.ok?r.json():null;}),
+ fetch("data/sources.json?v=0.2.0").then(function(r){return r.ok?r.json():null;}).catch(function(){return null;})])
+.then(function(a){var c=a[0],s=a[1];if(!c||!c.items)return;
+ ((s&&s.records)||[]).forEach(function(r){use[r.id]=r.used_for;});
+ var its=Object.keys(c.items).map(function(k){return c.items[k];}).sort(function(x,y){return String(x.date_sort||"").localeCompare(String(y.date_sort||""));});
+ if(!its.length)return;
+ its.forEach(function(it){var li=d.createElement("li"),a=d.createElement("a");a.target="_top";
+  a.href="/catalogue/?id="+encodeURIComponent(it.id);a.textContent=it.id+(it.date_display?" ("+it.date_display+")":"");li.appendChild(a);
+  if(it.title){li.appendChild(d.createTextNode(": "+it.title));}
+  if(it.status){var st=d.createElement("small");st.textContent=" · "+it.status;li.appendChild(st);}
+  if(use[it.id]){var u=d.createElement("span");u.className="u";u.textContent="Used for "+use[it.id]+".";li.appendChild(u);}
+  ul.appendChild(li);});
+ box.hidden=false;}).catch(function(){});})();
 (function(){var d=document,m=d.getElementById("changelog");if(!m)return;
 function op(e){if(e)e.preventDefault();if(m.showModal){if(!m.open)m.showModal();}else m.setAttribute("open","");}
 function cl(){if(m.close)m.close();else m.removeAttribute("open");}
